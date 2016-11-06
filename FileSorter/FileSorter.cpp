@@ -3,21 +3,14 @@
 
 #include "stdafx.h"
 #include <stdio.h>
-#include <tchar.h>
-#include <Windows.h>
-#include <strsafe.h>
 #include <iostream>
 #include <fstream>
-#include <list>
-#include <vector>
-#include <string>
-#include <string.h>
-#include "Directory.h"
+//#include <list>
+//#include <string>
+//#include <string.h>
 #include "MyUtils.h"
 
-#define MAX_DEPTH 10
-#define SEPARATOR L"|--"
-
+//Global args
 char _current_dir[MAX_PATH];
 char _filename[MAX_LENGTH] = "defaultTree.txt";
 TCHAR _current_path[MAX_PATH];
@@ -26,15 +19,10 @@ int _depth = MAX_DEPTH;
 template <size_t N>
 int checkCurrentDirectory(DWORD dwRet, TCHAR(&Buffer)[N]);
 
-std::wstring recurseDirs(std::vector<std::wstring> &myvec, std::wstring path, std::wstring dashes);
-std::wstring recDirs(std::vector<std::wstring> &myvec, int n);
-std::wstring construct_separator(int n);
-
 void parseMyCLI(int argc, char **argv);
 
 void main(int argc, char **argv)
 {
-	TCHAR Buffer[BUFSIZE];
 	DWORD dwRet;
 	parseMyCLI(argc, argv);
 	std::vector<std::wstring> tofill;
@@ -60,7 +48,7 @@ void main(int argc, char **argv)
 	}
 	output.push_back(L"this is output");
 	
-	std::wstring myret = recDirs(tofill, 1);
+	std::wstring myret = myutils::recDirs(tofill, 1, _depth);
 	for (auto m : tofill) {
 		std::wstring::iterator it1 = m.begin();
 		std::wstring::iterator it2 = m.end();
@@ -85,97 +73,6 @@ void main(int argc, char **argv)
 
 	return;
 
-}
- 
-//deprecated
-std::wstring recurseDirs(std::vector<std::wstring> &myvec, std::wstring path, std::wstring dashes) {
-
-	mydir::Directory temp = myutils::scanDir(path);
-	if (!temp.getListOfDirectoryNames().empty()) {
-
-		for (auto m : temp.getListOfDirectoryNames()) {
-			myvec.push_back(dashes + m);
-		}
-		dashes = dashes + L"--";
-		std::wstring fullPath(path + L"\\" + temp.getListOfDirectoryNames().front());
-		return recurseDirs(myvec, fullPath, dashes);
-	}
-	else {
-		//printf("recursion over\n");
-		//std::wcout << L"myvec is empty: " << myvec.empty() << std::endl;
-		//for (auto m : myvec) {
-		//	std::wcout << m << std::endl;
-		//}
-		return path;
-	}
-}
-
-//IN: myvec: list of directories in root directory
-//IN dashes
-std::wstring recDirs(std::vector<std::wstring> &myvec, int n ) {
-	std::vector<std::wstring> lcopy(myvec);
-	std::vector<std::wstring>::iterator it;
-	std::vector<std::wstring> localList;
-	std::wstring separator = construct_separator(n);
-	std::wstring next_separator = construct_separator(++n);
-	int recursion_flag = 0;
-
-	for (auto m : lcopy) {
-		if (m.substr(0, separator.length()) == separator) {
-			std::wstring dname = m.substr(separator.length());
-			mydir::Directory temp = myutils::scanDir(dname);
-			if (!temp.getListOfDirectoryNames().empty()) {
-				for (auto mb : temp.getListOfDirectoryNames()) {
-					localList.push_back(next_separator + dname + L"\\" + mb);
-				}
-				it = myvec.begin();
-				while (it < myvec.end()) {
-					if ((*it) != m) {
-						++it;
-					}
-					else {
-						break;
-					}
-				}
-				if (it == myvec.end()) {
-					myvec.insert(myvec.end(), localList.begin(), localList.end());
-				} else {
-					myvec.insert(++it, localList.begin(), localList.end());
-				}
-				localList.clear();
-				recursion_flag = 1;
-			}
-		}
-	}
-
-	if (separator == construct_separator(_depth)) {
-		return L"done";
-	}
-	else {
-		return recDirs(myvec, n++);
-	}
-}
-
-std::wstring construct_separator(int n) {
-	std::wstring ret;
-	for (int i = 0; i < n; i++) {
-		ret += SEPARATOR;
-	}
-	return ret;
-}
-
-void printDirectories(const mydir::Directory& dir, const int lvl) {
-	TCHAR Buffer[MAX_DEPTH][MAX_PATH];
-	mydir::Directory temp;
-	const wchar_t * cname;
-	std::wstring tempName;
-	std::wstring pathName;
-
-	std::wofstream ofile(_filename);
-
-	auto list = dir.getListOfDirectoryNames();
-
-	ofile.close();
 }
 
 template <size_t N>

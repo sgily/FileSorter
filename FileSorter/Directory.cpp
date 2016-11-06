@@ -27,7 +27,7 @@ std::wstring mydir::Directory::getDirectoryName() const {
 	do {
 		--it;
 	} while (*it != L'\\');
-	int pos = it - directoryPath.begin();
+	long int pos = it - directoryPath.begin();
 	std::wstring temp = directoryPath.substr(pos);
 	return temp;
 }

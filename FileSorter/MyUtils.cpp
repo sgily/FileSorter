@@ -1,5 +1,4 @@
 #include "MyUtils.h"
-#include <atlconv.h>
 
 void myutils::wstrtowchr(std::wstring inStr, TCHAR * Buf, size_t bufSize) {
 	//should handle some exceptions ?
@@ -12,6 +11,59 @@ void myutils::wstrtowchr(std::wstring inStr, TCHAR * Buf, size_t bufSize) {
 
 }
 
+//IN: myvec: list of directories in root directory
+//IN: n: depth
+std::wstring myutils::recDirs(std::vector<std::wstring> &myvec, int n, int depth) {
+	std::vector<std::wstring> lcopy(myvec);
+	std::vector<std::wstring>::iterator it;
+	std::vector<std::wstring> localList;
+	std::wstring separator = construct_separator(n);
+	std::wstring next_separator = construct_separator(++n);
+	int recursion_flag = 0;
+
+	for (auto m : lcopy) {
+		if (m.substr(0, separator.length()) == separator) {
+			std::wstring dname = m.substr(separator.length());
+			mydir::Directory temp = myutils::scanDir(dname);
+			if (!temp.getListOfDirectoryNames().empty()) {
+				for (auto mb : temp.getListOfDirectoryNames()) {
+					localList.push_back(next_separator + dname + L"\\" + mb);
+				}
+				it = myvec.begin();
+				while (it < myvec.end()) {
+					if ((*it) != m) {
+						++it;
+					}
+					else {
+						break;
+					}
+				}
+				if (it == myvec.end()) {
+					myvec.insert(myvec.end(), localList.begin(), localList.end());
+				}
+				else {
+					myvec.insert(++it, localList.begin(), localList.end());
+				}
+				localList.clear();
+				recursion_flag = 1;
+			}
+		}
+	}
+	if (separator == construct_separator(depth)) {
+		return L"done";
+	}
+	else {
+		return recDirs(myvec, n++, depth);
+	}
+}
+
+std::wstring myutils::construct_separator(int n) {
+	std::wstring ret;
+	for (int i = 0; i < n; i++) {
+		ret += SEPARATOR;
+	}
+	return ret;
+}
 
 mydir::Directory myutils::scanDir(const TCHAR * directoryPath) {
 	WIN32_FIND_DATA ffd;
@@ -75,7 +127,7 @@ mydir::Directory myutils::scanDir(std::wstring directoryPath) {//, const std::ws
 		//trigger exception
 		printf("error 1\n");
 		std::wcout << L"path is " << directoryPath << std::endl;
-		///std::wcout << L"dashes is " << front_append << std::endl;
+		//std::wcout << L"dashes is " << front_append << std::endl;
 		std::cout << "szDir contains :" << std::endl;
 		int i = 0;
 		
